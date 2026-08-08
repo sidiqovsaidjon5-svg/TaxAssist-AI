@@ -86,6 +86,21 @@ export default function AiAssistantPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  const initialAiMessage = {
+    id: "1",
+    sender: "ai" as const,
+    text: `**TaxAssist AI Copilot — Soliq va Moliya Tahlili (Lex.uz 2026)**\n\nSoliq Kodeksi moddalari, QQS Offset, ish haqi soliqlari hamda moliyaviy hisobotlar bo'yicha savolingizni bering.`,
+    articleBadges: [
+      { code: "306", label: "Lex.uz Art. 306 — Amortizatsiya Imtiyozi" },
+      { code: "266", label: "Lex.uz Art. 266 — QQS Offset Tartibi" },
+    ],
+    actionCard: {
+      title: `${activeCompany.potentialSavingsStr} Amortizatsiya Imtiyoz Buyrug'i`,
+      description: "Lex.uz Art. 306 bo'yicha tayyorlangan rasmiy korxona buyrug'i loyihasi",
+      buttonText: "Buyruq loyihasini yuklab olish",
+    },
+  };
+
   const [messages, setMessages] = useState<
     Array<{
       id: string;
@@ -99,22 +114,7 @@ export default function AiAssistantPage() {
         buttonText: string;
       };
     }>
-  >([
-    {
-      id: "1",
-      sender: "ai",
-      text: `Assalomu alaykum, **${user.name}**! Men sizning **${activeCompany.name}** bo'yicha shaxsiy AI CFO va Soliq Kopilotingizman.\n\nSizning moliyaviy ko'rsatkichlaringizni tahlil qildim:\n- **Soliq salomatligi:** ${activeCompany.taxHealthScore}% (${activeCompany.taxHealthLevel})\n- **STIR va rejim:** ${activeCompany.stir} • ${activeCompany.regime}\n- **Oylik tejamkorlik imkoniyati:** ${activeCompany.potentialSavingsStr}\n- **Lex.uz Soliq Kodeksi (https://lex.uz/docs/-4674902)** bilan 100% ulandim.\n\nSoliqlar, QQS Offset, jarima xavfi hamda kunlik buxgalteriya savollari bo'yicha murojaat qilishingiz mumkin!`,
-      articleBadges: [
-        { code: "306", label: "Lex.uz Art. 306 — Amortizatsiya Imtiyozi" },
-        { code: "266", label: "Lex.uz Art. 266 — QQS Offset Tartibi" },
-      ],
-      actionCard: {
-        title: `${activeCompany.potentialSavingsStr} Amortizatsiya Imtiyoz Buyrug'i`,
-        description: "Lex.uz Art. 306 bo'yicha tayyorlangan rasmiy korxona buyrug'i loyihasi",
-        buttonText: "Buyruq loyihasini yuklab olish",
-      },
-    },
-  ]);
+  >([initialAiMessage]);
 
   useEffect(() => {
     const savedKey = localStorage.getItem("GEMINI_API_KEY");
@@ -136,6 +136,19 @@ export default function AiAssistantPage() {
     };
     setSelectedModalArticle(data);
     setIsModalOpen(true);
+  };
+
+  // Reset chat state, clear context memory
+  const handleNewChat = () => {
+    setMessages([
+      {
+        id: Date.now().toString(),
+        sender: "ai",
+        text: `**TaxAssist AI Copilot — Yangi Muloqot Seansi Boshlandi**\n\nSoliq Kodeksi moddalari yoki buxgalteriya savolingizni bering.`,
+        articleBadges: [{ code: "306", label: "Lex.uz Soliq Kodeksi" }],
+      },
+    ]);
+    setInput("");
   };
 
   const handleSend = async (customPrompt?: string) => {
@@ -161,6 +174,7 @@ export default function AiAssistantPage() {
         body: JSON.stringify({
           prompt: textToSend,
           geminiApiKey: geminiApiKey || undefined,
+          history: messages.map((m) => ({ sender: m.sender, text: m.text })),
         }),
       });
 
@@ -221,7 +235,7 @@ export default function AiAssistantPage() {
     { title: "MChJ vs YTT soliq taqqoslami", fullPrompt: "MChJ va YTT soliq rejimlarini taqqoslab, qaysi biri tejamkorroq ekanini ayt." },
     { title: "Ishchilarni 2 taga oshirish (Art. 381)", fullPrompt: "Ishchilar sonini 2 taga oshirsam JSHODS va Ijtimoiy soliq qanchaga oshadi?" },
     { title: "QQS 12% Offset tartibi (Art. 266)", fullPrompt: "Soliq Kodeksining 266-moddasiga muvofiq QQS offsetini qo'llash shartlari nimadan iborat?" },
-    { title: "Asosiy vositalar amortizatsiyasi", fullPrompt: "Asosiy vositalar va uskunalar amortizatsiya imtiyozidan foydalanish tartibini tushuntir." },
+    { title: "Soliq Kodeksi 72-modda", fullPrompt: "Soliq kodeksi 72-modda bo'yicha soliq qarzini bo'lib-bo'lib to'lash tartibini tushuntiring." },
   ];
 
   return (
@@ -253,20 +267,12 @@ export default function AiAssistantPage() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() =>
-                setMessages([
-                  {
-                    id: Date.now().toString(),
-                    sender: "ai",
-                    text: `Assalomu alaykum, **${user.name}**! Yangi muloqot boshlandi. Biznesingiz yoki Lex.uz Soliq Kodeksi bo'yicha savolingizni bering.`,
-                    articleBadges: [{ code: "306", label: "Lex.uz Soliq Kodeksi" }],
-                  },
-                ])
-              }
-              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              onClick={handleNewChat}
+              className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95"
+              title="Yangi muloqot seansi va xotirani tozalash"
             >
               <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-              <span>Yangi Chat</span>
+              <span>Yangi Muloqot</span>
             </button>
 
             <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200/80 text-[11px] font-semibold px-3 py-1 rounded-full font-mono">

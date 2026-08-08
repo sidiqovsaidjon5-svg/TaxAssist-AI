@@ -13,6 +13,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { TelegramConnectModal } from "@/components/TelegramConnectModal";
+
 export default function SettingsPage() {
   const [companyName, setCompanyName] = useState('"Samarqand Tekstil" MChJ');
   const [stir, setStir] = useState("309 812 441");
@@ -20,6 +22,7 @@ export default function SettingsPage() {
   const [taxRegime, setTaxRegime] = useState("QQS");
   const [geminiApiKey, setGeminiApiKey] = useState("");
   const [saved, setSaved] = useState(false);
+  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
 
   const handleSave = () => {
     if (geminiApiKey) {
@@ -65,6 +68,9 @@ export default function SettingsPage() {
             return (
               <button
                 key={i}
+                onClick={() => {
+                  if (i === 3) setIsTelegramModalOpen(true);
+                }}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-colors text-left ${
                   tab.active
                     ? "bg-blue-50 text-blue-700 border border-blue-200/60 font-semibold"
@@ -168,6 +174,11 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      <TelegramConnectModal
+        isOpen={isTelegramModalOpen}
+        onClose={() => setIsTelegramModalOpen(false)}
+      />
     </div>
   );
 }

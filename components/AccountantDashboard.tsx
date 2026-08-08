@@ -72,13 +72,10 @@ export function AccountantDashboard() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => setIsLoginModalOpen(true)}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-4 py-3 rounded-2xl border border-white/10 transition-all"
-            >
+            <span className="flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl border border-white/15">
               <UserCheck className="w-4 h-4 text-emerald-300" />
-              <span>Direktor profiliga o'tish</span>
-            </button>
+              <span>Rol: Bosh Buxgalter (Operational)</span>
+            </span>
           </div>
         </div>
       </div>

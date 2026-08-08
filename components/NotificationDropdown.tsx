@@ -1,8 +1,21 @@
 "use client";
 
-import React from "react";
-import { Bell, X, AlertTriangle, Sparkles, Calendar, CheckCircle2, ChevronRight, MessageSquare } from "lucide-react";
+import React, { useState } from "react";
+import {
+  Bell,
+  X,
+  AlertTriangle,
+  Sparkles,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  MessageSquare,
+  Wrench,
+  CreditCard,
+  Check,
+} from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRole } from "@/context/RoleContext";
 
 interface NotificationDropdownProps {
@@ -10,131 +23,184 @@ interface NotificationDropdownProps {
   onClose: () => void;
 }
 
-const staticNotifications = [
+interface NotificationItem {
+  id: string;
+  title: string;
+  desc: string;
+  time: string;
+  type: "alert" | "warning" | "success" | "info";
+  href: string;
+  read: boolean;
+  actionText?: string;
+  actionType?: "fix" | "pay";
+}
+
+const initialStaticNotifications: NotificationItem[] = [
   {
-    id: "static-1",
-    title: "20-Avgust QQS hisoboti to'lovi xabardorligi",
-    desc: "Iyul oyi bo'yicha 18 450 000 UZS QQS to'loviga 22 kun qoldi. Bank qoldig'ida tanqislik xavfi bor.",
+    id: "notif-1",
+    title: "Oazis MChJ e-fakturasida QQS 15% xatosi aniqlandi",
+    desc: "AI Hujjat Auditi: Amaldagi Soliq Kodeksi Art. 237 bo'yicha QQS 12% bo'lishi lozim.",
     time: "10 daqiqa oldin",
-    type: "alert",
-    href: "/calendar",
-  },
-  {
-    id: "static-2",
-    title: "Oazis MChJ ijara shartnomasi xatosi aniqlandi",
-    desc: "AI Hujjat Auditi: Shartnomada QQS 12% o'rniga 15% noto'g'ri ko'rsatilgan.",
-    time: "1 soat oldin",
     type: "warning",
     href: "/documents",
+    read: false,
+    actionText: "Tuzatish",
+    actionType: "fix",
   },
   {
-    id: "static-3",
-    title: "14 000 000 UZS Amortizatsiya Imtiyozi Tayyor",
+    id: "notif-2",
+    title: "Soliq to'loviga 3 kun qoldi (22,940,000 UZS)",
+    desc: "QQS (12%) va Foyda solig'i hisobot to'lovini Soliq.uz orqali to'lash tavsiya etiladi.",
+    time: "30 daqiqa oldin",
+    type: "alert",
+    href: "/taxes",
+    read: false,
+    actionText: "To'lash",
+    actionType: "pay",
+  },
+  {
+    id: "notif-3",
+    title: "14,200,000 UZS Amortizatsiya Imtiyozi Tayyor",
     desc: "Lex.uz Art. 306 imtiyozi bo'yicha tayyorlangan korxona buyrug'i loyihasi yuklab olishga tayyor.",
     time: "Kecha",
     type: "success",
-    href: "/insights",
+    href: "/taxes",
+    read: true,
   },
 ];
 
 export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownProps) {
-  const { role, directorNotifications, markDirectorNotificationsRead, unreadNotificationsCount } = useRole();
+  const router = useRouter();
+  const { role, directorNotifications, markDirectorNotificationsRead } = useRole();
+  const [notifications, setNotifications] = useState<NotificationItem[]>(initialStaticNotifications);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleClose = () => {
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const handleMarkAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     if (role === "director") {
       markDirectorNotificationsRead();
     }
-    onClose();
+    showToast("Barcha bildirishnomalar o'qilgan deb belgilandi!");
   };
 
-  // Director sees dynamic completion notifications first, then static alerts
-  const directorDynamicItems = directorNotifications.map((n) => ({
-    id: n.id,
-    title: n.title,
-    desc: n.message,
-    time: n.date,
-    type: n.type,
-    href: "/",
-    isDynamic: true,
-    read: n.read,
-  }));
+  const handleToggleRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
 
-  const notifications =
-    role === "director"
-      ? [...directorDynamicItems, ...staticNotifications]
-      : staticNotifications;
+  const handleFixAction = (e: React.MouseEvent, n: NotificationItem) => {
+    e.stopPropagation();
+    handleToggleRead(n.id);
+    onClose();
+    showToast("Hujjatlar auditi bo'limiga o'tildi. QQS 12% ga tuzatish yuborildi!");
+    router.push("/documents");
+  };
 
-  const unreadCount =
-    role === "director"
-      ? unreadNotificationsCount + staticNotifications.length
-      : staticNotifications.length;
+  const handlePayAction = (e: React.MouseEvent, n: NotificationItem) => {
+    e.stopPropagation();
+    handleToggleRead(n.id);
+    onClose();
+    showToast("Soliq.uz portaliga to'lov topshiriqnomasi shakllantirildi!");
+    router.push("/taxes");
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="absolute right-0 top-14 w-80 sm:w-96 bg-white border border-slate-200/90 rounded-2xl shadow-2xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-      {/* Header */}
-      <div className="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <Bell className="w-4 h-4 text-blue-400" />
-          <h4 className="font-bold text-xs">AI Bildirishnomalar va Alertlar</h4>
-          <span className="text-[10px] bg-rose-500 text-white font-mono px-1.5 rounded-full font-bold">
-            {unreadCount} ta yangi
-          </span>
-        </div>
-        <button onClick={handleClose} className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer">
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Dynamic director completion notification(s) */}
-      {role === "director" && directorDynamicItems.length > 0 && (
-        <div className="p-2 pb-0 space-y-1.5">
-          {directorDynamicItems.map((n) => (
-            <div
-              key={n.id}
-              className={`p-3 rounded-xl border transition-all ${
-                !n.read
-                  ? "bg-emerald-50 border-emerald-200 ring-1 ring-emerald-400/30"
-                  : "bg-white border-slate-200/70"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-xs font-bold text-emerald-900 leading-snug flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  {n.title}
-                </span>
-                <span className="text-[9px] text-slate-400 font-mono shrink-0">{n.time}</span>
-              </div>
-              <p className="text-[11px] text-emerald-800 mt-1 leading-relaxed font-medium">{n.desc}</p>
-              {!n.read && (
-                <span className="inline-block mt-1.5 text-[9px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  🆕 Yangi
-                </span>
-              )}
-            </div>
-          ))}
-          <div className="border-b border-slate-100 mt-2" />
+    <div className="absolute right-0 top-14 w-80 sm:w-96 bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-2xl shadow-2xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+      {/* Toast inside dropdown */}
+      {toastMessage && (
+        <div className="p-3 bg-slate-900 text-white text-xs font-semibold flex items-center gap-2 border-b border-emerald-500/40">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Static Notifications List */}
-      <div className="p-2 space-y-1.5 max-h-[55vh] overflow-y-auto bg-slate-50/50">
-        {staticNotifications.map((n) => (
-          <Link
+      {/* Header Bar */}
+      <div className="p-4 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
+        <div className="flex items-center gap-2">
+          <Bell className="w-4 h-4 text-blue-400" />
+          <h4 className="font-bold text-xs">AI Alertlar & Bildirishnomalar</h4>
+          {unreadCount > 0 && (
+            <span className="text-[10px] bg-rose-500 text-white font-mono px-1.5 py-0.5 rounded-full font-bold">
+              {unreadCount} ta yangi
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1">
+          {unreadCount > 0 && (
+            <button
+              onClick={handleMarkAllAsRead}
+              className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold px-2 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 transition-colors cursor-pointer"
+            >
+              Hammasini o'qish
+            </button>
+          )}
+
+          <button onClick={onClose} className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Notification List */}
+      <div className="p-2 space-y-2 max-h-[60vh] overflow-y-auto bg-slate-50/60">
+        {notifications.map((n) => (
+          <div
             key={n.id}
-            href={n.href}
-            onClick={handleClose}
-            className="p-3 bg-white hover:bg-blue-50/60 rounded-xl border border-slate-200/70 hover:border-blue-200 transition-all block group"
+            onClick={() => handleToggleRead(n.id)}
+            className={`p-3.5 rounded-xl border transition-all cursor-pointer relative group ${
+              !n.read
+                ? "bg-white border-blue-200/90 shadow-2xs ring-1 ring-blue-500/20"
+                : "bg-white/60 border-slate-200/70 opacity-80"
+            }`}
           >
             <div className="flex items-start justify-between gap-2">
-              <span className="text-xs font-bold text-slate-900 group-hover:text-blue-900 leading-snug">
+              <span className="text-xs font-bold text-slate-900 group-hover:text-blue-900 leading-snug flex items-center gap-1.5">
+                {!n.read && <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />}
                 {n.title}
               </span>
               <span className="text-[9px] text-slate-400 font-mono shrink-0">{n.time}</span>
             </div>
+
             <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">{n.desc}</p>
-          </Link>
+
+            {/* Interactive Action Buttons */}
+            {n.actionType && (
+              <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[10px] text-slate-400 font-medium">Shoshilinch harakat:</span>
+
+                {n.actionType === "fix" && (
+                  <button
+                    onClick={(e) => handleFixAction(e, n)}
+                    className="bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold px-3 py-1 rounded-lg shadow-2xs transition-all flex items-center gap-1 cursor-pointer"
+                  >
+                    <Wrench className="w-3 h-3" />
+                    <span>[Tuzatish]</span>
+                  </button>
+                )}
+
+                {n.actionType === "pay" && (
+                  <button
+                    onClick={(e) => handlePayAction(e, n)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-3 py-1 rounded-lg shadow-2xs transition-all flex items-center gap-1 cursor-pointer"
+                  >
+                    <CreditCard className="w-3 h-3" />
+                    <span>[To'lash]</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
@@ -142,7 +208,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
       <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
         <Link
           href="/calendar"
-          onClick={handleClose}
+          onClick={onClose}
           className="text-xs text-blue-600 font-semibold hover:underline flex items-center justify-center gap-1"
         >
           <span>Barcha soliq bildirishnomalarini ko'rish</span>

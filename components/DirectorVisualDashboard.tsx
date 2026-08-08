@@ -114,18 +114,15 @@ export function DirectorVisualDashboard() {
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => setShowComposeModal(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-xs px-4 py-3 rounded-2xl shadow-lg shadow-blue-600/30 transition-all hover:scale-105 active:scale-95"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-xs px-4 py-3 rounded-2xl shadow-md transition-colors cursor-pointer"
             >
               <Send className="w-4 h-4" />
               <span>Buxgalterga Xat yozish</span>
             </button>
-            <button
-              onClick={() => setIsLoginModalOpen(true)}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-4 py-3 rounded-2xl border border-white/10 transition-all"
-            >
+            <span className="flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-3 rounded-2xl border border-white/15">
               <UserCheck className="w-4 h-4 text-blue-300" />
-              <span>Profilni o'zgartirish</span>
-            </button>
+              <span>Rol: Korxona Direktori (Executive)</span>
+            </span>
           </div>
         </div>
       </div>

@@ -19,7 +19,9 @@ import {
   Building2,
   Coins,
   FileSpreadsheet,
+  Info,
 } from "lucide-react";
+import { InfoTooltip } from "@/components/InfoTooltip";
 
 export default function FinancePage() {
   // Interactive Scenario Simulator States
@@ -27,7 +29,6 @@ export default function FinancePage() {
   const [plannedPurchases, setPlannedPurchases] = useState(25000000); // 25M UZS
 
   // Baseline July Figures
-  const baseRevenue = 248500000;
   const baseExpenses = 162100000;
 
   // Simulator Recalculations
@@ -40,12 +41,38 @@ export default function FinancePage() {
   // Dynamic AI Health Score
   const aiHealthScore = simulatedNetProfit > 70000000 ? 94 : simulatedNetProfit > 40000000 ? 82 : 65;
 
+  // Chart Interactive States
+  const [activeDataIndex, setActiveDataIndex] = useState<number>(3); // Default to August AI Forecast
+  const [hoveredExpenseIndex, setHoveredExpenseIndex] = useState<number | null>(0); // Default to first expense
+
+  // Monthly Financial Data for Power BI Area/Bar Chart
+  const monthlyChartData = [
+    { month: "May", rev: 195.0, exp: 148.0, revFull: 195000000, expFull: 148000000, isForecast: false },
+    { month: "Iyun", rev: 209.9, exp: 154.2, revFull: 209900000, expFull: 154200000, isForecast: false },
+    { month: "Iyul (Hozir)", rev: 248.5, exp: 162.1, revFull: 248500000, expFull: 162100000, isForecast: false },
+    { month: "Avgust (AI Prognoz)", rev: 275.0, exp: 168.0, revFull: 275000000, expFull: 168000000, isForecast: true },
+  ];
+
+  // Expense Categories Data for Interactive Donut
+  const expenseCategories = [
+    { id: 0, category: "Ish haqi va Soliqlar", amount: 68400000, pct: 42, color: "#3b82f6", bgClass: "bg-blue-600" },
+    { id: 1, category: "Xom-ashyo va Materiallar", amount: 56700000, pct: 35, color: "#6366f1", bgClass: "bg-indigo-600" },
+    { id: 2, category: "Ijara va Kommunal", amount: 24300000, pct: 15, color: "#14b8a6", bgClass: "bg-teal-500" },
+    { id: 3, category: "Boshqa Operatsion", amount: 12700000, pct: 8, color: "#94a3b8", bgClass: "bg-slate-400" },
+  ];
+
+  const activeExpense = hoveredExpenseIndex !== null ? expenseCategories[hoveredExpenseIndex] : expenseCategories[0];
+  const activeMonthData = monthlyChartData[activeDataIndex];
+  const activeProfit = activeMonthData.revFull - activeMonthData.expFull;
+  const activeMargin = ((activeProfit / activeMonthData.revFull) * 100).toFixed(1);
+
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 animate-in fade-in duration-200">
       {/* 1. Page Header with PDF Export Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <DollarSign className="w-7 h-7 text-blue-600" />
             Moliya va Pul Oqimi (Cash Flow)
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -54,19 +81,19 @@ export default function FinancePage() {
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs bg-white border border-slate-200/80 rounded-xl px-3 py-2 font-medium text-slate-700 shadow-2xs">
+          <span className="text-xs bg-white border border-slate-200/80 rounded-xl px-3.5 py-2 font-mono font-semibold text-slate-700 shadow-2xs">
             Davr: Iyul 2026
           </span>
 
-          <button className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer">
+          <button className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95">
             <Download className="w-4 h-4 text-blue-400" />
             <span>Export AI Financial Briefing (PDF)</span>
           </button>
         </div>
       </div>
 
-      {/* 2. AI CFO Insight Banner with Run Cash Flow Optimization CTA */}
-      <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white p-6 sm:p-7 rounded-2xl border border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+      {/* 2. AI CFO Insight Banner */}
+      <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white p-6 sm:p-7 rounded-3xl border border-slate-800 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="space-y-2 max-w-3xl relative z-10">
@@ -75,7 +102,7 @@ export default function FinancePage() {
             <span>AI CFO Tahlili: Sof foyda marjasi 34.7% ga yetdi (+4.2%)</span>
           </div>
 
-          <h2 className="text-lg sm:text-xl font-bold text-white leading-snug">
+          <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug">
             Iyul oyida operatsion samaradorlik sezilarli yaxshilandi.
           </h2>
 
@@ -84,199 +111,381 @@ export default function FinancePage() {
           </p>
         </div>
 
-        <button className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-3 rounded-xl shadow-md transition-all shrink-0 flex items-center gap-2 text-xs sm:text-sm cursor-pointer relative z-10 active:scale-95">
+        <button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-blue-500/20 transition-all shrink-0 flex items-center gap-2 text-xs sm:text-sm cursor-pointer relative z-10 active:scale-95">
           <Play className="w-4 h-4 fill-white" />
           <span>Run Cash Flow Optimization</span>
         </button>
       </div>
 
-      {/* 3. Top Financial Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Revenue */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+      {/* 3. Top Financial Metric Cards (Static Layout) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Revenue Card */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-blue-300/80 hover:shadow-md transition-all group cursor-pointer relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
               Umumiy Tushum (Iyul)
+              <InfoTooltip
+                title="Umumiy Tushum Manbasi"
+                text="Ushbu summa Soliq.uz va Didox bazasidagi Iyul oyida rasmiylashtirilgan barcha chiquvchi E-Fakturalar hamda bank tushumlari asosida shakllantirildi."
+              />
             </span>
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 border border-emerald-200">
               <ArrowUpRight className="w-3 h-3" /> +18.4%
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 font-mono">248 500 000 UZS</div>
-          <p className="text-[11px] text-slate-400 mt-1">O'tgan oy: 209 900 000 UZS</p>
+          <div className="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">248 500 000 UZS</div>
+          <p className="text-[11px] text-slate-400 mt-1.5 font-mono">O'tgan oy: 209 900 000 UZS</p>
         </div>
 
-        {/* Expenses */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+        {/* Expenses Card */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-blue-300/80 hover:shadow-md transition-all group cursor-pointer relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-400 to-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
               Jami Xarajatlar
+              <InfoTooltip
+                title="Jami Xarajatlar Manbasi"
+                text="Kiruvchi E-Fakturalar (xaridlar, ijara, xizmatlar) va bank orqali to'langan ish haqi hamda soliqlar summasi."
+              />
             </span>
             <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 border border-blue-200">
               <ArrowUpRight className="w-3 h-3" /> +5.1%
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 font-mono">162 100 000 UZS</div>
-          <p className="text-[11px] text-slate-400 mt-1">O'tgan oy: 154 200 000 UZS</p>
+          <div className="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">162 100 000 UZS</div>
+          <p className="text-[11px] text-slate-400 mt-1.5 font-mono">O'tgan oy: 154 200 000 UZS</p>
         </div>
 
-        {/* Profit */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+        {/* Profit Card */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-emerald-300/80 hover:shadow-md transition-all group cursor-pointer relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
               Sof Foyda
+              <InfoTooltip
+                title="Sof Foyda Formulasi"
+                text="Formula: Umumiy Tushum (248.5M) — Jami Xarajatlar (162.1M) = 86.4M UZS. Foydalilik darajasi: 34.7%."
+              />
             </span>
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 border border-emerald-200">
               <ArrowUpRight className="w-3 h-3" /> +55.1%
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 font-mono">86 400 000 UZS</div>
-          <p className="text-[11px] text-slate-400 mt-1">Foydalilik darajasi: 34.7%</p>
+          <div className="text-2xl font-extrabold text-emerald-600 font-mono tracking-tight">86 400 000 UZS</div>
+          <p className="text-[11px] text-slate-400 mt-1.5 font-mono">Foydalilik darajasi: 34.7%</p>
         </div>
 
-        {/* Cash Flow Forecast */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+        {/* Cash Flow Forecast Card */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-indigo-300/80 hover:shadow-md transition-all group cursor-pointer relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
               Avgust Cash Flow Prognozi
+              <InfoTooltip
+                title="AI Cash Flow Prognoz"
+                text="AI Forecast: O'tgan 3 oylik dinamika va kelgusi oydagi majburiy soliq to'lovlari asosida AI tomonidan hisoblangan kutilayotgan sof pul qoldig'i."
+              />
             </span>
             <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
               AI Forecast
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 font-mono">275 000 000 UZS</div>
-          <p className="text-[11px] text-slate-400 mt-1">Kutilayotgan sof qoldiq</p>
+          <div className="text-2xl font-extrabold text-indigo-600 font-mono tracking-tight">275 000 000 UZS</div>
+          <p className="text-[11px] text-slate-400 mt-1.5 font-mono">Kutilayotgan sof qoldiq</p>
         </div>
       </div>
 
-      {/* 4. DUAL BAR MONTHLY COMPARISON & DONUT EXPENSE STRUCTURE */}
+      {/* 4. POWER BI STYLE INTERACTIVE AREA CHART & 3D DONUT EXPENSE STRUCTURE */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Side-by-Side Dual Bar Chart for May, June, July, and August (AI Forecast) */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-            <div>
-              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
-                Oylik Taqqoslash: Tushum va Xarajatlar (2026)
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                May, Iyun, Iyul ko'rsatkichlari hamda Avgust oyining AI prognozi
+        {/* Left Column: Power BI Style Interactive Area Chart */}
+        <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 flex flex-col justify-between">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+              <div>
+                <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-blue-600" />
+                  Oylik Taqqoslash: Tushum va Xarajatlar (Power BI Visual)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  May, Iyun, Iyul ko'rsatkichlari hamda Avgust AI prognozi (Dashed Neon Line)
+                </p>
+              </div>
+
+              <div className="flex items-center gap-4 text-xs font-medium">
+                <span className="flex items-center gap-1.5 text-slate-700">
+                  <span className="w-3 h-3 rounded bg-blue-600" /> Tushum
+                </span>
+                <span className="flex items-center gap-1.5 text-slate-700">
+                  <span className="w-3 h-3 rounded bg-slate-400" /> Xarajat
+                </span>
+                <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                  <span className="w-3 h-0.5 bg-emerald-500 border border-dashed border-emerald-500" /> AI Glow
+                </span>
+              </div>
+            </div>
+
+            {/* Custom Interactive SVG Area Chart with SVG Gradients & Neon Glow */}
+            <div className="relative pt-6 pb-2">
+              <svg className="w-full h-56 sm:h-64 overflow-visible" viewBox="0 0 500 200">
+                <defs>
+                  {/* Revenue Fill Gradient */}
+                  <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#2563eb" stopOpacity="0.35" />
+                    <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
+                  </linearGradient>
+
+                  {/* Expense Fill Gradient */}
+                  <linearGradient id="expGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#64748b" stopOpacity="0.2" />
+                    <stop offset="100%" stopColor="#64748b" stopOpacity="0.0" />
+                  </linearGradient>
+
+                  {/* Neon Glow Filter for August Forecast Line */}
+                  <filter id="greenGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+
+                {/* Grid Lines */}
+                <line x1="40" y1="30" x2="480" y2="30" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+                <line x1="40" y1="80" x2="480" y2="80" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+                <line x1="40" y1="130" x2="480" y2="130" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+                <line x1="40" y1="170" x2="480" y2="170" stroke="#cbd5e1" strokeWidth="1" />
+
+                {/* Revenue Area Fill (May: (60,120), June: (180,105), July: (300,60), August: (420,30)) */}
+                <path
+                  d="M 60 170 L 60 120 L 180 105 L 300 60 L 420 30 L 420 170 Z"
+                  fill="url(#revGradient)"
+                />
+
+                {/* Revenue Solid Line (May to July) */}
+                <path
+                  d="M 60 120 L 180 105 L 300 60"
+                  fill="none"
+                  stroke="#2563eb"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                />
+
+                {/* Revenue Dashed Neon Line (July to August AI Forecast) */}
+                <path
+                  d="M 300 60 L 420 30"
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth="3.5"
+                  strokeDasharray="6 4"
+                  filter="url(#greenGlow)"
+                  className="animate-pulse"
+                />
+
+                {/* Expense Line (May: (60,150), June: (180,144), July: (300,135), August: (420,130)) */}
+                <path
+                  d="M 60 150 L 180 144 L 300 135 L 420 130"
+                  fill="none"
+                  stroke="#64748b"
+                  strokeWidth="2.5"
+                  strokeDasharray="4 3"
+                />
+
+                {/* Interactive Points */}
+                {[
+                  { x: 60, revY: 120, expY: 150, idx: 0 },
+                  { x: 180, revY: 105, expY: 144, idx: 1 },
+                  { x: 300, revY: 60, expY: 135, idx: 2 },
+                  { x: 420, revY: 30, expY: 130, idx: 3 },
+                ].map((pt) => {
+                  const isActive = activeDataIndex === pt.idx;
+                  return (
+                    <g key={pt.idx} className="cursor-pointer" onClick={() => setActiveDataIndex(pt.idx)}>
+                      {/* Vertical Hover Indicator Line */}
+                      {isActive && (
+                        <line
+                          x1={pt.x}
+                          y1="20"
+                          x2={pt.x}
+                          y2="170"
+                          stroke="#3b82f6"
+                          strokeWidth="1.5"
+                          strokeDasharray="3 3"
+                        />
+                      )}
+
+                      {/* Revenue Circle Node */}
+                      <circle
+                        cx={pt.x}
+                        cy={pt.revY}
+                        r={isActive ? "7" : "5"}
+                        fill={pt.idx === 3 ? "#10b981" : "#2563eb"}
+                        stroke="#ffffff"
+                        strokeWidth="2.5"
+                        className="transition-all duration-200 hover:r-8"
+                        onMouseEnter={() => setActiveDataIndex(pt.idx)}
+                      />
+
+                      {/* Expense Circle Node */}
+                      <circle
+                        cx={pt.x}
+                        cy={pt.expY}
+                        r={isActive ? "6" : "4"}
+                        fill="#64748b"
+                        stroke="#ffffff"
+                        strokeWidth="2"
+                        className="transition-all duration-200"
+                        onMouseEnter={() => setActiveDataIndex(pt.idx)}
+                      />
+
+                      {/* X-Axis Month Labels */}
+                      <text
+                        x={pt.x}
+                        y="190"
+                        textAnchor="middle"
+                        className={`text-[11px] font-mono font-semibold ${
+                          isActive ? "fill-blue-600 font-bold text-xs" : "fill-slate-500"
+                        }`}
+                      >
+                        {monthlyChartData[pt.idx].month.split(" ")[0]}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          </div>
+
+          {/* Interactive Dark Tooltip Popover displaying exact Active Month Details */}
+          <div className="bg-slate-900 text-white p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in duration-150">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-sm text-blue-300">
+                  {activeMonthData.month}
+                </span>
+                {activeMonthData.isForecast && (
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded font-mono font-bold">
+                    ✨ AI PROGNOZ NEON
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400">
+                Sichqoncha bilan istalgan oy ustiga bosing
               </p>
             </div>
 
-            <div className="flex items-center gap-4 text-xs">
-              <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                <span className="w-3 h-3 rounded bg-blue-600" /> Tushum
-              </span>
-              <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                <span className="w-3 h-3 rounded bg-slate-300" /> Xarajat
-              </span>
-            </div>
-          </div>
-
-          {/* Dual Bar Side-by-Side Graphic Chart */}
-          <div className="space-y-5 pt-2">
-            {[
-              { month: "May", rev: "195.0M UZS", exp: "148.0M UZS", revVal: 195, expVal: 148 },
-              { month: "Iyun", rev: "209.9M UZS", exp: "154.2M UZS", revVal: 209.9, expVal: 154.2 },
-              { month: "Iyul (Hozir)", rev: "248.5M UZS", exp: "162.1M UZS", revVal: 248.5, expVal: 162.1 },
-              { month: "Avgust (AI Prognoz)", rev: "275.0M UZS", exp: "168.0M UZS", revVal: 275, expVal: 168, isForecast: true },
-            ].map((item, i) => (
-              <div key={i} className="space-y-1.5">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span className={`flex items-center gap-1.5 ${item.isForecast ? "text-indigo-700 font-bold" : "text-slate-800"}`}>
-                    {item.month}
-                    {item.isForecast && (
-                      <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.2 rounded font-mono">
-                        PROGNOZ
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-slate-500 font-mono text-[11px]">
-                    Tushum: <strong className="text-blue-600">{item.rev}</strong> | Xarajat: <strong className="text-slate-700">{item.exp}</strong>
-                  </span>
-                </div>
-
-                {/* Side-by-Side Dual Bars */}
-                <div className="space-y-1">
-                  {/* Revenue Bar */}
-                  <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${
-                        item.isForecast
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-500 ring-2 ring-indigo-400/40"
-                          : "bg-blue-600"
-                      }`}
-                      style={{ width: `${(item.revVal / 275) * 100}%` }}
-                    />
-                  </div>
-
-                  {/* Expense Bar */}
-                  <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${
-                        item.isForecast
-                          ? "bg-slate-400 border border-indigo-300"
-                          : "bg-slate-300"
-                      }`}
-                      style={{ width: `${(item.expVal / 275) * 100}%` }}
-                    />
-                  </div>
-                </div>
+            <div className="flex items-center gap-6 font-mono text-xs flex-wrap">
+              <div>
+                <span className="text-slate-400 block text-[10px]">Tushum:</span>
+                <strong className="text-blue-400 text-sm">{activeMonthData.revFull.toLocaleString()} UZS</strong>
               </div>
-            ))}
+              <div>
+                <span className="text-slate-400 block text-[10px]">Xarajat:</span>
+                <strong className="text-slate-300 text-sm">{activeMonthData.expFull.toLocaleString()} UZS</strong>
+              </div>
+              <div className="pl-3 border-l border-slate-800">
+                <span className="text-slate-400 block text-[10px]">Sof Foyda:</span>
+                <strong className="text-emerald-400 text-sm">+{activeProfit.toLocaleString()} UZS</strong>
+                <span className="text-[10px] text-emerald-300 block font-semibold">({activeMargin}% Marja)</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Right Column: Donut & Expense Category Breakdown */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between space-y-4">
+        {/* Right Column: 3D Interactive Donut Chart & Expense Structure */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between space-y-5">
           <div>
-            <div className="pb-3 border-b border-slate-100 mb-4">
-              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                <PieChart className="w-4 h-4 text-blue-600" />
-                Xarajatlar Strukturasi
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">Iyul oyi jami xarajati: 162.1M UZS</p>
+            <div className="pb-3 border-b border-slate-100 mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                  <PieChart className="w-4.5 h-4.5 text-blue-600" />
+                  Xarajatlar Strukturasi (3D Donut)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Iyul oyi jami xarajati: 162.1M UZS</p>
+              </div>
             </div>
 
-            {/* Expense Categories */}
-            <div className="space-y-3">
-              {[
-                { category: "Ish haqi va Soliqlar", amount: "68.4M UZS", pct: 42, color: "bg-blue-600" },
-                { category: "Xom-ashyo va Materiallar", amount: "56.7M UZS", pct: 35, color: "bg-indigo-600" },
-                { category: "Ijara va Kommunal", amount: "24.3M UZS", pct: 15, color: "bg-teal-500" },
-                { category: "Boshqa Operatsion", amount: "12.7M UZS", pct: 8, color: "bg-slate-300" },
-              ].map((cat, idx) => (
-                <div key={idx} className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-slate-800 flex items-center gap-1.5">
-                      <span className={`w-2.5 h-2.5 rounded-full ${cat.color}`} />
-                      {cat.category}
-                    </span>
-                    <span className="font-mono text-slate-900">{cat.pct}% ({cat.amount})</span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${cat.color}`}
-                      style={{ width: `${cat.pct}%` }}
+            {/* 3D Interactive Donut Chart Visualization */}
+            <div className="relative flex items-center justify-center py-2">
+              <svg className="w-48 h-48 transform -rotate-90 overflow-visible" viewBox="0 0 160 160">
+                {/* Donut Segments with 3D Hover Expansion */}
+                {[
+                  { dash: 158.3, offset: 0, idx: 0, color: "#3b82f6" },
+                  { dash: 131.9, offset: -158.3, idx: 1, color: "#6366f1" },
+                  { dash: 56.5, offset: -290.2, idx: 2, color: "#14b8a6" },
+                  { dash: 30.1, offset: -346.7, idx: 3, color: "#94a3b8" },
+                ].map((segment) => {
+                  const isHovered = hoveredExpenseIndex === segment.idx;
+                  return (
+                    <circle
+                      key={segment.idx}
+                      cx="80"
+                      cy="80"
+                      r="60"
+                      fill="transparent"
+                      stroke={segment.color}
+                      strokeWidth={isHovered ? "22" : "16"}
+                      strokeDasharray={`${segment.dash} 377`}
+                      strokeDashoffset={segment.offset}
+                      className="transition-all duration-300 cursor-pointer"
+                      style={{
+                        filter: isHovered ? "drop-shadow(0px 4px 8px rgba(0,0,0,0.25))" : "none",
+                      }}
+                      onMouseEnter={() => setHoveredExpenseIndex(segment.idx)}
                     />
+                  );
+                })}
+              </svg>
+
+              {/* Donut Center Display */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-2">
+                <span className="text-2xl font-extrabold text-slate-900 font-mono tracking-tight animate-in zoom-in-95 duration-150">
+                  {activeExpense.pct}%
+                </span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider max-w-[100px] truncate">
+                  {activeExpense.category.split(" ")[0]}
+                </span>
+              </div>
+            </div>
+
+            {/* Expense Categories List */}
+            <div className="space-y-2.5 mt-4">
+              {expenseCategories.map((cat) => {
+                const isHovered = hoveredExpenseIndex === cat.id;
+                return (
+                  <div
+                    key={cat.id}
+                    onMouseEnter={() => setHoveredExpenseIndex(cat.id)}
+                    className={`p-2.5 rounded-xl transition-all cursor-pointer border ${
+                      isHovered
+                        ? "bg-slate-100/90 border-blue-300 shadow-2xs scale-[1.02]"
+                        : "bg-slate-50 border-slate-100 hover:bg-slate-100/60"
+                    }`}
+                  >
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-slate-800 flex items-center gap-2">
+                        <span className={`w-3 h-3 rounded-full ${cat.bgClass} shrink-0`} />
+                        {cat.category}
+                      </span>
+                      <span className="font-mono text-slate-900 font-bold">
+                        {cat.pct}% ({ (cat.amount / 1000000).toFixed(1) }M UZS)
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500">
-            💡 <strong>AI Maslahat:</strong> Ish haqi xarajatlari ulushi 42% ni tashkil etadi. Bu sanoat mezoniga mos.
+            💡 <strong>AI CFO Tahlili:</strong> Ish haqi va soliqlar ulushi 42% ni tashkil etadi va sanoat mezoniga mos.
           </div>
         </div>
       </div>
 
       {/* 5. INTERACTIVE "WHAT-IF" FINANCIAL SCENARIO SIMULATOR WIDGET */}
-      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div>
-            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+            <h3 className="font-bold text-slate-900 text-base sm:text-lg flex items-center gap-2">
               <Sliders className="w-5 h-5 text-indigo-600" />
               AI Scenario Simulator (What-If Analysis)
             </h3>
@@ -285,7 +494,7 @@ export default function FinancePage() {
             </p>
           </div>
 
-          <span className="text-xs bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-xl font-mono font-bold border border-indigo-200">
+          <span className="text-xs bg-indigo-50 text-indigo-700 px-3.5 py-1.5 rounded-xl font-mono font-bold border border-indigo-200 hidden sm:inline-block">
             Real-Time Simulation
           </span>
         </div>
@@ -343,7 +552,7 @@ export default function FinancePage() {
           </div>
 
           {/* Results Output Card */}
-          <div className="bg-slate-900 text-white p-6 rounded-2xl flex flex-col justify-between space-y-4 border border-slate-800 shadow-md">
+          <div className="bg-slate-900 text-white p-6 sm:p-7 rounded-2xl flex flex-col justify-between space-y-4 border border-slate-800 shadow-md">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
@@ -356,7 +565,7 @@ export default function FinancePage() {
 
               <div className="space-y-2">
                 <div className="text-xs text-slate-400">Prognoz qilingan Sof Foyda:</div>
-                <div className="text-3xl font-bold font-mono text-emerald-400">
+                <div className="text-3xl font-extrabold font-mono text-emerald-400">
                   {simulatedNetProfit.toLocaleString()} UZS
                 </div>
                 <div className="text-xs text-slate-400 font-mono">

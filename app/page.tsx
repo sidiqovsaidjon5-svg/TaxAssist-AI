@@ -26,6 +26,8 @@ import {
   MessageSquare,
   AlertCircle,
   X,
+  Download,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { useRole } from "@/context/RoleContext";
@@ -99,41 +101,91 @@ export default function Dashboard() {
     return a.id - b.id;
   });
 
-  // Calendar Events (Conditional styling: daysLeft <= 3 => RED alert badge)
-  const calendarEvents = [
+  // Real-Time Month & Countdown Calculation (Live JavaScript Date Engine)
+  const today = new Date();
+  const monthNamesUz = [
+    "Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun",
+    "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"
+  ];
+  const currentMonthName = monthNamesUz[today.getMonth()];
+  const currentYear = today.getFullYear();
+  const monthNumber = (today.getMonth() + 1).toString().padStart(2, "0");
+
+  const rawCalendarData = [
     {
       id: "cal-1",
       name: "Foyda solig'i bo'nak to'lovi",
       desc: "Iyul oyi bo'nak to'lovi hisoboti",
-      date: "10-Avgust",
+      dateDisplay: `10-${currentMonthName}`,
       amount: "12 400 000 UZS",
-      daysLeft: 2, // <= 3 => RED ALERT!
+      targetIso: `${currentYear}-${monthNumber}-10`,
     },
     {
       id: "cal-2",
       name: "JSHODS va Ijtimoiy Soliq",
       desc: "6 ta xodimlarning ish haqi soliqlari",
-      date: "15-Avgust",
+      dateDisplay: `15-${currentMonthName}`,
       amount: "6 300 000 UZS",
-      daysLeft: 7,
+      targetIso: `${currentYear}-${monthNumber}-15`,
     },
     {
       id: "cal-3",
       name: "QQS (12%) Oylik Hisoboti va To'lovi",
       desc: "Summa: 18.45M UZS",
-      date: "20-Avgust",
+      dateDisplay: `20-${currentMonthName}`,
       amount: "18 450 000 UZS",
-      daysLeft: 12,
+      targetIso: `${currentYear}-${monthNumber}-20`,
     },
     {
       id: "cal-4",
-      name: "Mol-mulk solig'i bo'nak to'lovi",
+      name: "Mol-mulk va Yer solig'i bo'nagi",
       desc: "3-Chorak bo'nak to'lovi",
-      date: "25-Avgust",
+      dateDisplay: `25-${currentMonthName}`,
       amount: "4 200 000 UZS",
-      daysLeft: 17,
+      targetIso: `${currentYear}-${monthNumber}-25`,
     },
   ];
+
+  // Dynamic Live Countdown calculation
+  const calendarEvents = rawCalendarData.map((evt) => {
+    const targetDate = new Date(evt.targetIso);
+    const diffMs = targetDate.getTime() - today.getTime();
+    const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    return {
+      ...evt,
+      date: evt.dateDisplay,
+      daysLeft: daysLeft >= 0 ? daysLeft : 0,
+    };
+  });
+
+  // Google Calendar URL Generator
+  const openGoogleCalendarSync = (evtName: string, evtDesc: string, targetIso: string) => {
+    const dateFormatted = targetIso.replace(/-/g, "");
+    const startTime = `${dateFormatted}T090000Z`;
+    const endTime = `${dateFormatted}T100000Z`;
+    const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+      `[Soliq.uz] ${evtName}`
+    )}&details=${encodeURIComponent(evtDesc)}&dates=${startTime}/${endTime}`;
+    window.open(gCalUrl, "_blank");
+  };
+
+  // iCal (.ics) Download Generator
+  const downloadIcalCalendar = () => {
+    let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//TaxAssist AI//Soliq Kalendari//UZ\n";
+    calendarEvents.forEach((evt) => {
+      const dateFormatted = evt.targetIso.replace(/-/g, "");
+      icsContent += `BEGIN:VEVENT\nSUMMARY:[Soliq.uz] ${evt.name}\nDESCRIPTION:${evt.desc} - Summa: ${evt.amount}\nDTSTART:${dateFormatted}T090000Z\nDTEND:${dateFormatted}T100000Z\nEND:VEVENT\n`;
+    });
+    icsContent += "END:VCALENDAR";
+
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `soliq_kalendari_${currentMonthName.toLowerCase()}_${currentYear}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const progressPercentage = Math.round((completedTasks.length / tasksList.length) * 100);
 
@@ -572,20 +624,43 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right Column: Soliq Kalendari (Conditional Red Alert < 3 Days) */}
+        {/* Right Column: Soliq Kalendari (Real-Time Live Countdown & Calendar Sync) */}
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
               <h3 className="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
                 <CalendarIcon className="w-4.5 h-4.5 text-blue-600" />
-                Soliq Kalendari (Avgust 2026)
+                Soliq Kalendari ({currentMonthName} {currentYear})
               </h3>
-              <button
-                onClick={() => setIsCalendarModalOpen(true)}
-                className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <span>Barchasi</span> →
-              </button>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* iCal (.ics) Export Button */}
+                <button
+                  onClick={downloadIcalCalendar}
+                  className="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer border border-slate-200/60"
+                  title="iCal yuklab olish (.ics)"
+                >
+                  <Download className="w-3 h-3 text-slate-500" />
+                  <span>.ics</span>
+                </button>
+
+                {/* Google Calendar Sync Button */}
+                <button
+                  onClick={() => openGoogleCalendarSync(calendarEvents[0].name, calendarEvents[0].desc, calendarEvents[0].targetIso)}
+                  className="text-[11px] bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer border border-blue-200"
+                  title="Google Calendar-ga ulash"
+                >
+                  <ExternalLink className="w-3 h-3 text-blue-600" />
+                  <span>Google</span>
+                </button>
+
+                <button
+                  onClick={() => setIsCalendarModalOpen(true)}
+                  className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-0.5 cursor-pointer ml-1"
+                >
+                  <span>Barchasi</span> →
+                </button>
+              </div>
             </div>
 
             {/* Events List with Conditional Red Styling (daysLeft <= 3 => RED ALERT) */}
@@ -642,47 +717,57 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ─── FULL AUGUST 2026 TAX CALENDAR MODAL ─── */}
+      {/* ─── DYNAMIC MONTHLY TAX CALENDAR MODAL (GRID VIEW + CALENDAR SYNC) ─── */}
       {isCalendarModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-700 text-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-6 relative animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+          <div className="bg-slate-900 border border-slate-700 text-white rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-2xl space-y-6 relative animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
             <div className="flex items-start justify-between border-b border-slate-800 pb-4 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-500/20 border border-blue-500/40 text-blue-400 flex items-center justify-center">
                   <CalendarIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-white">To'liq Soliq Kalendari (Avgust 2026)</h3>
-                  <p className="text-xs text-blue-400 font-mono">Rasmiy Soliq.uz Muddatlari va To'lovlar</p>
+                  <h3 className="font-bold text-base text-white">To'liq Soliq Kalendari ({currentMonthName} {currentYear})</h3>
+                  <p className="text-xs text-blue-400 font-mono">Rasmiy Soliq.uz Muddatlari va Sinxronizatsiya</p>
                 </div>
               </div>
 
-              <button
-                onClick={() => setIsCalendarModalOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={downloadIcalCalendar}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-blue-400" />
+                  <span>iCal Yuklash (.ics)</span>
+                </button>
+
+                <button
+                  onClick={() => setIsCalendarModalOpen(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-3 overflow-y-auto pr-1 flex-1">
+            {/* Grid View for Full Calendar Events */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 overflow-y-auto pr-1 flex-1">
               {calendarEvents.map((evt) => {
                 const isCritical = evt.daysLeft <= 3;
                 return (
                   <div
                     key={evt.id}
-                    className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+                    className={`p-4 rounded-2xl border flex flex-col justify-between space-y-3 ${
                       isCritical
                         ? "bg-rose-950/40 border-rose-500/40 text-rose-200"
                         : "bg-slate-800/60 border-slate-700 text-slate-200"
                     }`}
                   >
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        {isCritical && <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />}
+                      <div className="flex items-center justify-between">
                         <h4 className="font-bold text-sm text-white">{evt.name}</h4>
                         {isCritical && (
-                          <span className="text-[10px] bg-rose-500 text-white font-extrabold px-2 py-0.5 rounded font-mono">
+                          <span className="text-[10px] bg-rose-500 text-white font-extrabold px-2 py-0.5 rounded font-mono animate-pulse">
                             SHOSHILINCH
                           </span>
                         )}
@@ -690,11 +775,21 @@ export default function Dashboard() {
                       <p className="text-xs text-slate-400">{evt.desc}</p>
                     </div>
 
-                    <div className="text-right font-mono shrink-0">
-                      <p className="text-sm font-extrabold text-white">{evt.amount}</p>
-                      <p className={`text-xs mt-0.5 ${isCritical ? "text-rose-400 font-bold" : "text-blue-300"}`}>
-                        {evt.date} ({evt.daysLeft} kun qoldi)
-                      </p>
+                    <div className="flex items-center justify-between pt-2.5 border-t border-slate-700/60 font-mono">
+                      <div>
+                        <p className="text-sm font-extrabold text-white">{evt.amount}</p>
+                        <p className={`text-xs mt-0.5 ${isCritical ? "text-rose-400 font-bold" : "text-blue-300"}`}>
+                          {evt.date} ({evt.daysLeft} kun qoldi)
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => openGoogleCalendarSync(evt.name, evt.desc, evt.targetIso)}
+                        className="bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-[11px] font-semibold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <span>Sync</span>
+                      </button>
                     </div>
                   </div>
                 );

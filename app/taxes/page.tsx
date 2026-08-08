@@ -26,6 +26,7 @@ import {
 import Link from "next/link";
 import { useRole } from "@/context/RoleContext";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { exportFinancialBriefingPdf, exportTaxDataCsv } from "@/utils/exportHelpers";
 
 // Currency formatting helper (e.g. 30000000 -> "30 000 000")
 const formatCurrency = (val: number | string) => {
@@ -125,10 +126,35 @@ export default function TaxesPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs bg-white/10 backdrop-blur-md text-blue-200 border border-white/15 px-3.5 py-2 rounded-xl font-mono font-semibold">
-                Iyul 2026 Operatsiyalari
-              </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => {
+                  const columns = ["Sana", "Hujjat / Soliq Turi", "Summa (UZS)", "QQS Offset", "Status"];
+                  const rows = [
+                    ["20-Avg", "QQS (12%) Oylik Hisoboti", formatCurrency(netPayableVat) + " UZS", formatCurrency(inputVatOffset) + " UZS", "Kutilmoqda"],
+                    ["15-Avg", "JSHODS va Ijtimoiy Soliq (12%)", "16 400 000 UZS", "0 UZS", "Kutilmoqda"],
+                    ["10-Avg", "Foyda Solig'i Bo'nak To'lovi (Art. 306)", formatCurrency(profitTax15) + " UZS", "0 UZS", "Tasdiqlangan"],
+                    ["05-Avg", "Sotuv E-Fakturasi #1049", formatCurrency(salesRevenue) + " UZS", formatCurrency(outputVat) + " UZS", "Tasdiqlangan"],
+                    ["01-Avg", "Kiruvchi Xarid E-Fakturasi #8821", formatCurrency(incomingPurchases) + " UZS", formatCurrency(inputVatOffset) + " UZS", "Tasdiqlangan"],
+                  ];
+                  exportTaxDataCsv("soliqlar_reestri", columns, rows);
+                  setIsApplicationToastOpen(true);
+                }}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>Excel (.xlsx/CSV) Yuklash</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  exportFinancialBriefingPdf(activeCompany.name, activeCompany.stir, "Sardor Rahmatov");
+                }}
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>AI Briefing (PDF) Export</span>
+              </button>
             </div>
           </div>
 

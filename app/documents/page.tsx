@@ -13,8 +13,23 @@ import {
   Eye,
   FileCode,
 } from "lucide-react";
+import { exportTaxDataCsv } from "@/utils/exportHelpers";
 
 export default function DocumentsPage() {
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const handleExportDocumentsCsv = () => {
+    const columns = ["Hujjat Nomi", "Turi", "Sana", "Status / AI Risk", "Qoidabuzarlik"];
+    const rows = [
+      ["Oazis MChJ Ijara Shartnomasi.pdf", "Shartnoma", "14-Iyul, 2026", "Xavf Aniqlandi (O'rta)", "QQS 15% noto'g'ri ko'rsatilgan (Art. 237)"],
+      ["SamTekstil_Yetkazib_berish_#1049.pdf", "E-Faktura", "01-Avgust, 2026", "Tasdiqlandi (0 Risk)", "Xatolik aniqlanmadi"],
+      ["Asosiy_Vosita_Amortizatsiya_Buyruq.pdf", "Ichki Buyruq", "05-Avgust, 2026", "Tasdiqlandi (0 Risk)", "Art. 306 bo'yicha 14.2M UZS tejamkorlik"],
+    ];
+    exportTaxDataCsv("hujjatlar_va_ai_audit_reestri", columns, rows);
+    setToastMsg("Hujjatlar reestri Excel (CSV) formatida yuklab olindi!");
+    setTimeout(() => setToastMsg(null), 4000);
+  };
+
   const [selectedDoc, setSelectedDoc] = useState({
     title: "Oazis MChJ Ijara Shartnomasi.pdf",
     type: "Shartnoma",
@@ -42,6 +57,19 @@ export default function DocumentsPage() {
 
   return (
     <div className="space-y-8">
+      {/* Toast notification */}
+      {toastMsg && (
+        <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-emerald-500/50 flex items-center gap-3 animate-in slide-in-from-top-4 duration-300">
+          <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-emerald-400">Export Muvaffaqiyatli!</p>
+            <p className="text-[11px] text-slate-200">{toastMsg}</p>
+          </div>
+        </div>
+      )}
+
       {/* Title */}
       <div className="flex items-center justify-between">
         <div>
@@ -51,10 +79,20 @@ export default function DocumentsPage() {
           </p>
         </div>
 
-        <button className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm shadow-blue-600/20 flex items-center gap-2 transition-all">
-          <Upload className="w-4 h-4" />
-          Yangi Hujjat Yuklash (PDF/Image)
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportDocumentsCsv}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <FileText className="w-4 h-4" />
+            Excel (.xlsx/CSV) Yuklash
+          </button>
+
+          <button className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm shadow-blue-600/20 flex items-center gap-2 transition-all cursor-pointer">
+            <Upload className="w-4 h-4" />
+            Yangi Hujjat Yuklash (PDF/Image)
+          </button>
+        </div>
       </div>
 
       {/* Main Grid: Left Document List, Right AI Audit Detail */}

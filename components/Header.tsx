@@ -7,6 +7,7 @@ import { useRole } from "@/context/RoleContext";
 import { LoginModal } from "@/components/LoginModal";
 import { GlobalSearchModal } from "@/components/GlobalSearchModal";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { TelegramConnectModal } from "@/components/TelegramConnectModal";
 
 interface HeaderProps {
   onOpenAiDrawer?: () => void;
@@ -21,6 +22,7 @@ export function Header({ onOpenAiDrawer, onToggleMobileSidebar }: HeaderProps) {
   const notifBadgeCount = role === "director" ? unreadNotificationsCount : pendingDirectivesCount;
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
 
   return (
     <>
@@ -110,6 +112,15 @@ export function Header({ onOpenAiDrawer, onToggleMobileSidebar }: HeaderProps) {
             )}
           </button>
 
+          {/* Telegram Bot Connect Button */}
+          <button
+            onClick={() => setIsTelegramModalOpen(true)}
+            className="p-1.5 sm:p-2 text-sky-600 hover:text-sky-800 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer"
+            title="Telegram Botga Ulash (@TaxAssistAI_Bot)"
+          >
+            <Sparkles className="w-4 h-4 text-sky-500 animate-pulse" />
+          </button>
+
           {/* Notification Bell (Triggers Dropdown Drawer) */}
           <button
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
@@ -137,6 +148,12 @@ export function Header({ onOpenAiDrawer, onToggleMobileSidebar }: HeaderProps) {
       <GlobalSearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
+      />
+
+      {/* Telegram Bot Connect Modal */}
+      <TelegramConnectModal
+        isOpen={isTelegramModalOpen}
+        onClose={() => setIsTelegramModalOpen(false)}
       />
 
       {/* Login / Role Switcher Modal */}

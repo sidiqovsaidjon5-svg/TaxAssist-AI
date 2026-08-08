@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Sparkles,
   ShieldAlert,
@@ -14,9 +14,14 @@ import {
   BookOpen,
   FileCheck,
   Zap,
+  Mic,
+  Volume2,
+  Activity,
+  Compass,
 } from "lucide-react";
 import Link from "next/link";
 import { useRole } from "@/context/RoleContext";
+import { exportFinancialBriefingPdf } from "@/utils/exportHelpers";
 
 interface AiHeaderBannerProps {
   onOpenTaskModal?: () => void;
@@ -29,9 +34,22 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
   const [isDeadlineModalOpen, setIsDeadlineModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Voice Assistant Audio Wave State
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const handleExportPdf = () => {
+    setIsExportingPdf(true);
+    setTimeout(() => {
+      exportFinancialBriefingPdf(activeCompany.name, activeCompany.stir, user.name);
+      setIsExportingPdf(false);
+      showToast("AI Financial Briefing (PDF) muvaffaqiyatli yuklab olindi!");
+    }, 600);
   };
 
   const handleConfirmSavings = () => {
@@ -56,6 +74,10 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
     showToast(`${activeCompany.upcomingPaymentName} bo'yicha to'lov topshiriqnomasi shakllantirildi!`);
   };
 
+  // Speedometer Arc calculation for Tax Health Score
+  const gaugePercent = activeCompany.taxHealthScore || 70;
+  const strokeDashoffset = 188 - (188 * gaugePercent) / 100;
+
   return (
     <>
       {/* Floating Action Toast Notification */}
@@ -71,94 +93,109 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
         </div>
       )}
 
-      {/* Main Dark Welcome Banner */}
-      <div className="bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 shadow-xl relative overflow-hidden border border-slate-800/80">
-        {/* Background Ambient Blur Glows */}
-        <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+      {/* Main Dark Glassmorphism Welcome Banner (Static, Zero Tilt) */}
+      <div className="bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 sm:p-6 lg:p-8 shadow-2xl relative overflow-hidden border border-slate-800/80 cursor-default">
+      >
+        {/* Background Glossy Ambient Blur Glows */}
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-600/25 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
 
-        {/* 12-Column Grid Layout: Clean Column Separation with Zero Overlap */}
+        {/* 12-Column Grid Layout */}
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-          {/* 👈 CHAP USTUN (lg:col-span-8 xl:col-span-9): Barcha matnlar va 3 ta kartochka */}
-          <div className="lg:col-span-8 xl:col-span-9 space-y-4">
-            {/* Top Status Badges */}
-            <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold text-blue-200 border border-white/10 shadow-xs">
-                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+          {/* 👈 CHAP USTUN (lg:col-span-8 xl:col-span-9): Text & Glass Mini Cards */}
+          <div className="lg:col-span-8 xl:col-span-9 space-y-5">
+            {/* Top Badges & 3D Speedometer Gauge Widget */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-xl px-3.5 py-1.5 rounded-full text-xs font-semibold text-blue-200 border border-white/15 shadow-md">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-pulse" />
                 <span>TaxAssist AI • {activeCompany.name}</span>
               </div>
 
-              {/* Pulsing Green/Amber/Rose Status Dot + Soliq Salomatligi */}
-              <div
-                className={`inline-flex items-center gap-1.5 sm:gap-2 backdrop-blur-md px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-medium border ${
-                  activeCompany.healthColor === "rose"
-                    ? "bg-rose-500/10 text-rose-300 border-rose-500/20"
-                    : activeCompany.healthColor === "amber"
-                    ? "bg-amber-500/10 text-amber-300 border-amber-500/20"
-                    : activeCompany.healthColor === "teal"
-                    ? "bg-teal-500/10 text-teal-300 border-teal-500/20"
-                    : "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
-                }`}
-              >
-                <span className="relative flex h-2.5 w-2.5">
-                  <span
-                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                      activeCompany.healthColor === "rose"
-                        ? "bg-rose-400"
-                        : activeCompany.healthColor === "amber"
-                        ? "bg-amber-400"
-                        : activeCompany.healthColor === "teal"
-                        ? "bg-teal-400"
-                        : "bg-emerald-400"
-                    }`}
-                  />
-                  <span
-                    className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                      activeCompany.healthColor === "rose"
-                        ? "bg-rose-500"
-                        : activeCompany.healthColor === "amber"
-                        ? "bg-amber-500"
-                        : activeCompany.healthColor === "teal"
-                        ? "bg-teal-500"
-                        : "bg-emerald-500"
-                    }`}
-                  />
-                </span>
+              {/* 3D SPEEDOMETER ARC GAUGE WIDGET FOR TAX HEALTH */}
+              <div className="inline-flex items-center gap-2.5 bg-slate-900/80 backdrop-blur-xl px-3.5 py-1.5 rounded-full text-xs font-semibold border border-white/15 shadow-xl hover:shadow-emerald-500/20 transition-all">
+                {/* Mini SVG Gauge */}
+                <div className="relative w-7 h-7 flex items-center justify-center">
+                  <svg className="w-7 h-7 transform -rotate-90" viewBox="0 0 40 40">
+                    <circle
+                      cx="20"
+                      cy="20"
+                      r="15"
+                      fill="none"
+                      stroke="#334155"
+                      strokeWidth="3.5"
+                    />
+                    <circle
+                      cx="20"
+                      cy="20"
+                      r="15"
+                      fill="none"
+                      stroke={gaugePercent > 80 ? "#10b981" : gaugePercent > 60 ? "#eab308" : "#f43f5e"}
+                      strokeWidth="4"
+                      strokeDasharray="94"
+                      strokeDashoffset={94 - (94 * gaugePercent) / 100}
+                      strokeLinecap="round"
+                      className="transition-all duration-700"
+                      style={{
+                        filter: "drop-shadow(0px 0px 6px rgba(16, 185, 129, 0.6))",
+                      }}
+                    />
+                  </svg>
+                  <Activity className="w-3 h-3 text-emerald-400 absolute" />
+                </div>
+
                 <span>
-                  Soliq salomatligi: <strong>{activeCompany.taxHealthScore}% ({activeCompany.taxHealthLevel})</strong>
+                  Soliq salomatligi: <strong className="text-emerald-400 font-extrabold">{activeCompany.taxHealthScore}%</strong> ({activeCompany.taxHealthLevel})
                 </span>
               </div>
 
-              <span className="text-[11px] sm:text-xs text-slate-400 font-mono">
+              <button
+                onClick={handleExportPdf}
+                disabled={isExportingPdf}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full border border-blue-400/40 shadow-md transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isExportingPdf ? (
+                  <>
+                    <Activity className="w-3.5 h-3.5 animate-spin text-white" />
+                    <span>AI Hisobot shakllantirilmoqda...</span>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-3.5 h-3.5 text-blue-200" />
+                    <span>Export AI Financial Briefing (PDF)</span>
+                  </>
+                )}
+              </button>
+
+              <span className="text-xs text-slate-400 font-mono">
                 STIR: {activeCompany.stir}
               </span>
             </div>
 
             {/* Clean Headline & Subtitle */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white leading-snug">
                 Xush kelibsiz, {user.name}!{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-400">
                   {activeCompany.name}
                 </span>{" "}
                 moliyaviy holati ko'rib chiqilmoqda.
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
                 {activeCompany.fineText}. AI yordamchingiz ushbu korxona uchun{" "}
-                <strong className="text-emerald-400 font-semibold">{activeCompany.potentialSavingsStr}</strong> qonuniy soliq tejamkorligi imkoniyatini aniqladi.
+                <strong className="text-emerald-400 font-bold">{activeCompany.potentialSavingsStr}</strong> qonuniy soliq tejamkorligi imkoniyatini aniqladi.
               </p>
             </div>
 
-            {/* 3 Interactive Priority Cards (Mobile: 1 column, MD: 3 columns) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+            {/* 3 Interactive Premium Glossy Glassmorphism Priority Cards (Static Layout) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
               {/* Card 1: Yaqinlashayotgan Muddat */}
               <div
                 onClick={() => setIsDeadlineModalOpen(true)}
-                className="bg-white/5 backdrop-blur-md border border-white/10 hover:border-blue-400/80 p-3 sm:p-3.5 rounded-xl transition-all duration-200 block group hover:bg-white/10 shadow-xs cursor-pointer hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                className="bg-gradient-to-b from-white/12 to-white/5 backdrop-blur-xl border border-white/20 hover:border-blue-400/80 p-3.5 rounded-2xl transition-colors group hover:bg-white/15 shadow-md cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-semibold text-blue-300 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold text-blue-300 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-blue-400" />
                     Yaqinlashayotgan Muddat
                   </span>
                   <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-mono font-bold">
@@ -174,11 +211,11 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
               {/* Card 2: AI Tejamkorlik */}
               <div
                 onClick={() => setIsSavingsModalOpen(true)}
-                className="bg-white/5 backdrop-blur-md border border-white/10 hover:border-emerald-400/80 p-3 sm:p-3.5 rounded-xl transition-all duration-200 block group hover:bg-white/10 shadow-xs cursor-pointer hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                className="bg-gradient-to-b from-white/12 to-white/5 backdrop-blur-xl border border-white/20 hover:border-emerald-400/80 p-3.5 rounded-2xl transition-colors group hover:bg-white/15 shadow-md cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
                     AI Tejamkorlik
                   </span>
                   <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold">
@@ -188,7 +225,7 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
                 <p className="text-xs text-white font-medium group-hover:text-emerald-200 transition-colors truncate">
                   Asosiy vositalar imtiyozi (Art. 306)
                 </p>
-                <p className="text-[11px] text-emerald-300 mt-1 font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                <p className="text-[11px] text-emerald-300 mt-1 font-semibold flex items-center gap-1">
                   <span>Topshiriq shakllantirish</span> →
                 </p>
               </div>
@@ -196,11 +233,11 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
               {/* Card 3: Hujjat Auditi */}
               <div
                 onClick={() => setIsAuditModalOpen(true)}
-                className="bg-white/5 backdrop-blur-md border border-white/10 hover:border-amber-400/80 p-3 sm:p-3.5 rounded-xl transition-all duration-200 block group hover:bg-white/10 shadow-xs cursor-pointer hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                className="bg-gradient-to-b from-white/12 to-white/5 backdrop-blur-xl border border-white/20 hover:border-amber-400/80 p-3.5 rounded-2xl transition-colors group hover:bg-white/15 shadow-md cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
-                    <ShieldAlert className="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
                     Hujjat Auditi
                   </span>
                   <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">
@@ -215,31 +252,57 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
             </div>
           </div>
 
-          {/* 👉 O'NG USTUN (lg:col-span-4 xl:col-span-3): TAXASSIST AI Vidjeti markazda */}
+          {/* 👉 O'NG USTUN (lg:col-span-4 xl:col-span-3): SPHERE ORB & VOICE ASSISTANT WAVE */}
           <div className="lg:col-span-4 xl:col-span-3 flex flex-col items-center justify-center p-2 lg:p-0">
             <div
               onClick={() => setIsSavingsModalOpen(true)}
-              className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center group cursor-pointer"
+              className="relative w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center group cursor-pointer"
             >
-              {/* Outer Rotating Glowing Ring */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-emerald-500/30 via-blue-500/30 to-indigo-500/20 blur-xl group-hover:blur-2xl transition-all duration-500 animate-pulse" />
+              {/* Outer Glowing Ambient Ring */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-emerald-500/30 via-blue-500/30 to-indigo-500/20 blur-2xl transition-all duration-500" />
 
-              {/* 3D Glass Badge Container */}
-              <div className="relative w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-b from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col items-center justify-center p-3 sm:p-4 transform group-hover:scale-105 transition-all duration-500">
-                {/* Inner Glowing Core Icon */}
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-emerald-400 to-blue-600 p-0.5 shadow-lg shadow-emerald-500/30 mb-2">
-                  <div className="w-full h-full bg-slate-950/80 rounded-[10px] sm:rounded-[14px] flex items-center justify-center backdrop-blur-md">
-                    <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400 animate-bounce" />
+              {/* Glass Badge Container (Static) */}
+              <div className="relative w-36 h-36 sm:w-44 sm:h-44 bg-gradient-to-b from-white/15 via-white/10 to-slate-900/60 backdrop-blur-2xl border border-white/25 rounded-3xl shadow-xl flex flex-col items-center justify-center p-4 transition-colors">
+                {/* 3D Animated Particle Sphere/Orb Visualizer */}
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-emerald-400 via-teal-500 to-blue-600 p-0.5 shadow-xl shadow-emerald-500/30 mb-2">
+                  <div className="w-full h-full bg-slate-950/90 rounded-[14px] flex items-center justify-center backdrop-blur-md relative overflow-hidden">
+                    {/* Rotating Particles */}
+                    <div className="absolute inset-0 rounded-full border border-emerald-400/40 animate-spin" style={{ animationDuration: "6s" }} />
+                    <div className="absolute inset-1 rounded-full border border-blue-400/30 animate-spin" style={{ animationDuration: "9s", animationDirection: "reverse" }} />
+                    <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400 animate-bounce relative z-10" />
                   </div>
                 </div>
 
                 {/* Text Badge */}
-                <span className="text-xs sm:text-xs font-bold text-white tracking-wide uppercase">
+                <span className="text-xs font-extrabold text-white tracking-wide uppercase">
                   TaxAssist AI
                 </span>
-                <span className="text-[9px] sm:text-[10px] text-emerald-300 font-mono mt-1 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-400/30">
-                  Topshiriq Tayyor 🟢
-                </span>
+
+                {/* Voice Assistant Wave Indicator Button */}
+                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                  {isVoiceActive ? (
+                    <button
+                      onClick={() => setIsVoiceActive(false)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 border border-emerald-400/40 rounded-full text-[10px] font-mono text-emerald-300 shadow-xs"
+                      title="Ovozli yordamchini o'chirish"
+                    >
+                      <span className="w-1 h-3 bg-emerald-400 rounded-full animate-[pulse_0.4s_infinite]" />
+                      <span className="w-1 h-4 bg-emerald-300 rounded-full animate-[pulse_0.6s_infinite]" />
+                      <span className="w-1 h-2.5 bg-teal-400 rounded-full animate-[pulse_0.3s_infinite]" />
+                      <span className="w-1 h-4 bg-emerald-400 rounded-full animate-[pulse_0.5s_infinite]" />
+                      <span>Faol...</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setIsVoiceActive(true)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-400/30 rounded-full text-[10px] font-semibold text-blue-300 transition-colors shadow-xs"
+                      title="Ovozli AI yordamchini yoqish"
+                    >
+                      <Mic className="w-3 h-3 text-blue-400" />
+                      <span>Ovozli AI Wave</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -263,7 +326,7 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
 
               <button
                 onClick={() => setIsSavingsModalOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -302,7 +365,7 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
             <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
               <button
                 onClick={() => setIsSavingsModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
               >
                 Yopish
               </button>
@@ -335,7 +398,7 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
 
               <button
                 onClick={() => setIsAuditModalOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -367,7 +430,7 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
             <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
               <button
                 onClick={() => setIsAuditModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
               >
                 Bekor qilish
               </button>
@@ -400,7 +463,7 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
 
               <button
                 onClick={() => setIsDeadlineModalOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -427,7 +490,7 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
             <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
               <button
                 onClick={() => setIsDeadlineModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
               >
                 Yopish
               </button>

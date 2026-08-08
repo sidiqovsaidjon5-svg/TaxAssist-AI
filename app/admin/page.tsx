@@ -96,12 +96,12 @@ function KpiCard({ kpi, index }: { kpi: typeof kpis[0]; index: number }) {
 
   return (
     <div
-      className="group bg-white/70 backdrop-blur-md border border-slate-200/80 rounded-2xl p-5 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.10)] hover:border-slate-300/80 cursor-default shadow-sm"
+      className="group bg-white/70 backdrop-blur-md border border-slate-200/80 rounded-2xl p-5 flex flex-col gap-4 transition-colors hover:border-slate-300/80 cursor-default shadow-xs"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex items-center justify-between">
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+          className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
           style={{ backgroundColor: `${kpi.color}12`, border: `1px solid ${kpi.color}22` }}
         >
           <Icon className="w-4 h-4" style={{ color: kpi.color }} />

@@ -95,7 +95,6 @@ export function AiHeaderBanner({ onOpenTaskModal }: AiHeaderBannerProps) {
 
       {/* Main Dark Glassmorphism Welcome Banner (Static, Zero Tilt) */}
       <div className="bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 sm:p-6 lg:p-8 shadow-2xl relative overflow-hidden border border-slate-800/80 cursor-default">
-      >
         {/* Background Glossy Ambient Blur Glows */}
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-600/25 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />

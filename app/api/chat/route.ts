@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const cleanPrompt = prompt.replace(/^["'\s]+|["'\s]+$/g, "").trim();
     const lower = cleanPrompt.toLowerCase();
-    const apiKey = geminiApiKey || process.process?.env?.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    const apiKey = geminiApiKey || process.env.GEMINI_API_KEY;
 
     // Prune history context: Limit payload to last 3 conversation turns (max 6 messages)
     const conversationTurns = Array.isArray(history) ? history.slice(-6) : [];

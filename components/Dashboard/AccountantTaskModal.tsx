@@ -255,7 +255,7 @@ export function AccountantTaskModal({ isOpen, onClose }: AccountantTaskModalProp
         <div className="p-4 bg-white border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Topshiriq bajarilganda hisoblagich avtomatik 4 -> 3 ga kamayadi</span>
+            <span>Topshiriq bajarilganda hisoblagich avtomatik 4 &rarr; 3 ga kamayadi</span>
           </div>
 
           <button

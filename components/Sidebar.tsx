@@ -13,20 +13,24 @@ import {
   Sparkles,
   Settings,
   Building2,
-  ChevronDown,
   ShieldCheck,
-  UserCheck,
   LogOut,
-  Lock,
   Shield,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import { useRole } from "@/context/RoleContext";
+import { CompanyDropdown } from "@/components/CompanyDropdown";
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, role, logout } = useRole();
+  const { user, role, activeCompany, logout } = useRole();
 
   const navItems = [
     { name: "Bosh sahifa", href: "/", icon: LayoutDashboard },
@@ -41,45 +45,51 @@ export function Sidebar() {
 
   const handleLogout = () => {
     logout();
+    onClose?.();
     router.push("/login");
   };
 
-  return (
-    <aside className="w-64 bg-white border-r border-slate-200/80 flex flex-col h-screen sticky top-0 z-30 select-none">
+  const handleNavClick = () => {
+    onClose?.();
+  };
+
+  const sidebarContent = (isMobile: boolean = false) => (
+    <div className="flex flex-col h-full select-none bg-white">
       {/* Brand & Business Selector */}
       <div className="p-4 border-b border-slate-100">
-        <div className="flex items-center gap-3 mb-3">
-          <Image
-            src="/logo.png"
-            alt="TaxAssist AI Logo"
-            width={38}
-            height={38}
-            className="object-contain drop-shadow-md shrink-0"
-          />
-          <div>
-            <h1 className="font-semibold text-slate-900 leading-none flex items-center gap-1.5">
-              TaxAssist AI
-              <span className="bg-blue-50 text-blue-700 text-[10px] font-medium px-1.5 py-0.5 rounded border border-blue-200">
-                PRO
-              </span>
-            </h1>
-            <p className="text-xs text-slate-500 mt-1">AI Financial Copilot</p>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="TaxAssist AI Logo"
+              width={38}
+              height={38}
+              className="object-contain drop-shadow-md shrink-0"
+            />
+            <div>
+              <h1 className="font-semibold text-slate-900 leading-none flex items-center gap-1.5 text-sm sm:text-base">
+                TaxAssist AI
+                <span className="bg-blue-50 text-blue-700 text-[10px] font-medium px-1.5 py-0.5 rounded border border-blue-200">
+                  PRO
+                </span>
+              </h1>
+              <p className="text-xs text-slate-500 mt-1">AI Financial Copilot</p>
+            </div>
           </div>
+
+          {isMobile && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer md:hidden"
+              title="Yopish"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
-        {/* Active Business Selector Card */}
-        <div className="bg-slate-50 hover:bg-slate-100/80 transition-colors p-2.5 rounded-xl border border-slate-200/60 cursor-pointer flex items-center justify-between group">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold shrink-0">
-              <Building2 className="w-4 h-4" />
-            </div>
-            <div className="truncate">
-              <p className="text-xs font-medium text-slate-800 truncate">"Samarqand Tekstil" MChJ</p>
-              <p className="text-[10px] text-slate-500">STIR: 309 812 441 • QQS</p>
-            </div>
-          </div>
-          <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 shrink-0 transition-transform group-hover:translate-y-0.5" />
-        </div>
+        {/* Interactive Company Selector Dropdown */}
+        <CompanyDropdown />
       </div>
 
       {/* Main Navigation */}
@@ -94,6 +104,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleNavClick}
               className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 isActive
                   ? role === "director"
@@ -124,9 +135,9 @@ export function Sidebar() {
 
       {/* Compliance Health Card & User Profile Footer */}
       <div className="p-3 border-t border-slate-100 space-y-2">
-        {/* Admin Panel Link — subtle, for demo nav */}
         <Link
           href="/admin"
+          onClick={handleNavClick}
           className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-all border ${
             pathname === "/admin"
               ? "bg-slate-900 text-white border-slate-700 shadow-sm"
@@ -139,16 +150,70 @@ export function Sidebar() {
           </span>
           <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Super</span>
         </Link>
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200/60 p-2.5 rounded-xl">
+
+        {/* Dynamic Active Company Soliq Salomatligi Card */}
+        <div
+          className={`border p-2.5 rounded-xl transition-all ${
+            activeCompany.healthColor === "rose"
+              ? "bg-gradient-to-br from-rose-50 to-amber-50 border-rose-200"
+              : activeCompany.healthColor === "amber"
+              ? "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200"
+              : activeCompany.healthColor === "teal"
+              ? "bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-200/80"
+              : "bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200/60"
+          }`}
+        >
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-emerald-800 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span
+              className={`text-xs font-semibold flex items-center gap-1.5 ${
+                activeCompany.healthColor === "rose"
+                  ? "text-rose-900"
+                  : activeCompany.healthColor === "amber"
+                  ? "text-amber-900"
+                  : activeCompany.healthColor === "teal"
+                  ? "text-teal-900"
+                  : "text-emerald-800"
+              }`}
+            >
+              <ShieldCheck
+                className={`w-3.5 h-3.5 ${
+                  activeCompany.healthColor === "rose"
+                    ? "text-rose-600"
+                    : activeCompany.healthColor === "amber"
+                    ? "text-amber-600"
+                    : activeCompany.healthColor === "teal"
+                    ? "text-teal-600"
+                    : "text-emerald-600"
+                }`}
+              />
               Soliq Salomatligi
             </span>
-            <span className="text-xs font-bold text-emerald-700">94%</span>
+            <span
+              className={`text-xs font-bold ${
+                activeCompany.healthColor === "rose"
+                  ? "text-rose-700"
+                  : activeCompany.healthColor === "amber"
+                  ? "text-amber-700"
+                  : activeCompany.healthColor === "teal"
+                  ? "text-teal-700"
+                  : "text-emerald-700"
+              }`}
+            >
+              {activeCompany.taxHealthScore}%
+            </span>
           </div>
-          <p className="text-[10px] text-emerald-700 leading-tight">
-            Xavf darajasi: <strong className="font-semibold">Juda Past</strong>. 0 ta soliq jarimasi.
+          <p
+            className={`text-[10px] leading-tight ${
+              activeCompany.healthColor === "rose"
+                ? "text-rose-800"
+                : activeCompany.healthColor === "amber"
+                ? "text-amber-800"
+                : activeCompany.healthColor === "teal"
+                ? "text-teal-800"
+                : "text-emerald-700"
+            }`}
+          >
+            {activeCompany.fineText}
           </p>
         </div>
 
@@ -164,6 +229,28 @@ export function Sidebar() {
           <span className="text-[10px] text-slate-400 font-mono">OneID</span>
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sticky Sidebar */}
+      <aside className="w-64 border-r border-slate-200/80 hidden md:flex flex-col h-screen sticky top-0 z-30 shrink-0">
+        {sidebarContent(false)}
+      </aside>
+
+      {/* Mobile Drawer Overlay Sidebar */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
+            onClick={onClose}
+          />
+          <aside className="relative w-72 max-w-[85vw] h-full shadow-2xl z-50 animate-in slide-in-from-left duration-300">
+            {sidebarContent(true)}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

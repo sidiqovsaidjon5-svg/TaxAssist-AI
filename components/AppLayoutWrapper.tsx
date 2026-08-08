@@ -10,6 +10,7 @@ import { RoleProvider } from "@/context/RoleContext";
 export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const isLoginPage = pathname === "/login";
   const isAdminPage = pathname === "/admin";
 
@@ -36,12 +37,18 @@ export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   return (
     <RoleProvider>
       {/* Left Navigation Sidebar */}
-      <Sidebar />
+      <Sidebar
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
+      />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <Header onOpenAiDrawer={() => setIsAiDrawerOpen(true)} />
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto animate-in fade-in duration-200">
+        <Header
+          onOpenAiDrawer={() => setIsAiDrawerOpen(true)}
+          onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        />
+        <main className="flex-1 p-3.5 sm:p-6 md:p-8 max-w-7xl w-full mx-auto animate-in fade-in duration-200">
           {children}
         </main>
       </div>
@@ -51,3 +58,4 @@ export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
     </RoleProvider>
   );
 }
+

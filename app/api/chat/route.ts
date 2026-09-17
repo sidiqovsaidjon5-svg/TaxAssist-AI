@@ -49,7 +49,7 @@ JAVOB FORMATI:
 - **AI CFO Xulosasi** (1 ta aniq amaliy qadam)`;
 
     if (apiKey) {
-      const models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"];
+      const models = ["gemini-3.6-flash", "gemini-2.5-flash"];
 
       // Format conversation history for Gemini API
       const geminiContents = [
